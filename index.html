@@ -1,18 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Captcha & SMS Provider Balance Checker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
         .gradient-bg {
             background: linear-gradient(135deg, #6b73ff 0%, #000dff 100%);
         }
         .card-shadow {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+                        0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
         .fade-in {
             animation: fadeIn 0.3s ease-in-out;
@@ -42,15 +46,15 @@
                 <div>
                     <label for="apiKey" class="block text-sm font-medium text-gray-700 mb-1">API Key</label>
                     <div class="relative">
-                        <input 
-                            type="password" 
-                            id="apiKey" 
-                            placeholder="Enter your API key" 
+                        <input
+                            type="password"
+                            id="apiKey"
+                            placeholder="Enter your API key"
                             class="w-full px-4 py-2 rounded-lg border border-gray-300 input-highlight focus:outline-none"
                             autocomplete="off"
-                        >
+                        />
                         <button
-                            id="toggleKey" 
+                            id="toggleKey"
                             class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                             type="button"
                         >
@@ -61,8 +65,8 @@
 
                 <div>
                     <label for="provider" class="block text-sm font-medium text-gray-700 mb-1">Provider</label>
-                    <select 
-                        id="provider" 
+                    <select
+                        id="provider"
                         class="w-full px-4 py-2 rounded-lg border border-gray-300 input-highlight focus:outline-none"
                     >
                         <option value="" disabled selected>Select a provider</option>
@@ -71,7 +75,7 @@
                         <option value="2captcha">2Captcha</option>
                         <option value="capsolver">CapSolver</option>
                         <option value="5sim">5Sim</option>
-                        <option value="smoker">SMSBower</option>
+                        <option value="smsbower">SMSBower</option>
                         <option value="grizzlysms">GrizzlySMS</option>
                         <option value="sms24h">SMS24H</option>
                         <option value="sms-activate.ae">SMS-Activate.ae</option>
@@ -80,8 +84,8 @@
                     </select>
                 </div>
 
-                <button 
-                    id="checkBalance" 
+                <button
+                    id="checkBalance"
                     class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center justify-center"
                 >
                     <span id="buttonText">Check Balance</span>
@@ -119,150 +123,152 @@
         const buttonText = document.getElementById('buttonText');
         const loadingSpinner = document.getElementById('loadingSpinner');
 
-        // Provider configuration
-    const providers = {
-    nextcaptcha: {
-        name: "NextCaptcha",
-        endpoint: "https://api.nextcaptcha.com/getBalance",
-        method: "POST",
-        headers: {},
-        data: (key) => ({ clientKey: key }),
-        parseResponse: (res) => res.data.balance || "Unknown format"
-    },
-    ezcaptcha: {
-        name: "EZCaptcha",
-        endpoint: "https://api.ez-captcha.com/balance",
-        method: "POST",
-        headers: {},
-        data: (key) => ({ api_key: key }),
-        parseResponse: (res) => res.data.balance || "Unknown format"
-    },
-    '2captcha': {
-        name: "2Captcha",
-        endpoint: "https://2captcha.com/res.php",
-        method: "GET",
-        headers: {},
-        params: (key) => ({ key, action: "getbalance", json: 1 }),
-        parseResponse: (res) => res.data.request || "Unknown format"
-    },
-    capsolver: {
-        name: "CapSolver",
-        endpoint: "https://api.capsolver.com/getBalance",
-        method: "POST",
-        headers: {},
-        data: (key) => ({ clientKey: key }),
-        parseResponse: (res) => res.data.balance || "Unknown format"
-    },
-    '5sim': {
-        name: "5Sim",
-        endpoint: "https://5sim.net/v1/user/profile",
-        method: "GET",
-        headers: (key) => ({ Authorization: `Bearer ${key}` }),
-        parseResponse: (res) => res.data.balance || "Unknown format"
-    },
-    smsbower: {
-        name: "SMSBower",
-        endpoint: (key) => `https://smsbower.online/stubs/handler_api.php?api_key=${key}&action=getBalance`,
-        method: "GET",
-        headers: {},
-        parseResponse: (res) => res.data || "Unknown format"
-    },
-    grizzlysms: {
-        name: "GrizzlySMS",
-        endpoint: (key) => `https://api.grizzlysms.com/stubs/handler_api.php?api_key=${key}&action=getBalance`,
-        method: "GET",
-        headers: {},
-        parseResponse: (res) => res.data || "Unknown format"
-    },
-    sms24h: {
-        name: "SMS24H",
-        endpoint: (key) => `https://api.sms24h.org/stubs/handler_api?api_key=${key}&action=getBalance`,
-        method: "GET",
-        headers: {},
-        parseResponse: (res) => res.data || "Unknown format"
-    },
-    'sms-activate.ae': {
-        name: "SMS-Activate.ae",
-        endpoint: (key) => `https://api.sms-activate.ae/stubs/handler_api.php?api_key=${key}&action=getBalance`,
-        method: "GET",
-        headers: {},
-        parseResponse: (res) => res.data || "Unknown format"
-    },
-    getatext: {
-        name: "GetAText",
-        endpoint: "https://getatext.com/api/v1/balance",
-        method: "GET",
-        headers: (key) => ({ Auth: key }),
-        parseResponse: (res) => res.data.balance || "Unknown format"
-    },
-    daisysms: {
-        name: "DaisySMS",
-        endpoint: (key) => `https://daisysms.com/stubs/handler_api.php?api_key=${key}&action=getBalance`,
-        method: "GET",
-        headers: {},
-        parseResponse: (res) => res.data || "Unknown format"
-    }
-};
+        // Providers configuration
+        const providers = {
+            nextcaptcha: {
+                name: "NextCaptcha",
+                endpoint: "https://api.nextcaptcha.com/getBalance",
+                method: "POST",
+                headers: {},
+                data: (key) => ({ clientKey: key }),
+                parseResponse: (res) => res.data.balance || "Unknown format",
+            },
+            ezcaptcha: {
+                name: "EZCaptcha",
+                endpoint: "https://api.ez-captcha.com/balance",
+                method: "POST",
+                headers: {},
+                data: (key) => ({ api_key: key }),
+                parseResponse: (res) => res.data.balance || "Unknown format",
+            },
+            "2captcha": {
+                name: "2Captcha",
+                endpoint: "https://2captcha.com/res.php",
+                method: "GET",
+                headers: {},
+                params: (key) => ({ key, action: "getbalance", json: 1 }),
+                parseResponse: (res) => res.data.request || "Unknown format",
+            },
+            capsolver: {
+                name: "CapSolver",
+                endpoint: "https://api.capsolver.com/getBalance",
+                method: "POST",
+                headers: {},
+                data: (key) => ({ clientKey: key }),
+                parseResponse: (res) => res.data.balance || "Unknown format",
+            },
+            "5sim": {
+                name: "5Sim",
+                endpoint: "https://5sim.net/v1/user/profile",
+                method: "GET",
+                headers: (key) => ({ Authorization: `Bearer ${key}` }),
+                parseResponse: (res) => res.data.balance || "Unknown format",
+            },
+            smsbower: {
+                name: "SMSBower",
+                endpoint: (key) =>
+                    `https://smsbower.online/stubs/handler_api.php?api_key=${key}&action=getBalance`,
+                method: "GET",
+                headers: {},
+                parseResponse: (res) => res.data || "Unknown format",
+            },
+            grizzlysms: {
+                name: "GrizzlySMS",
+                endpoint: (key) =>
+                    `https://api.grizzlysms.com/stubs/handler_api.php?api_key=${key}&action=getBalance`,
+                method: "GET",
+                headers: {},
+                parseResponse: (res) => res.data || "Unknown format",
+            },
+            sms24h: {
+                name: "SMS24H",
+                endpoint: (key) =>
+                    `https://api.sms24h.org/stubs/handler_api?api_key=${key}&action=getBalance`,
+                method: "GET",
+                headers: {},
+                parseResponse: (res) => res.data || "Unknown format",
+            },
+            "sms-activate.ae": {
+                name: "SMS-Activate.ae",
+                endpoint: (key) =>
+                    `https://api.sms-activate.ae/stubs/handler_api.php?api_key=${key}&action=getBalance`,
+                method: "GET",
+                headers: {},
+                parseResponse: (res) => res.data || "Unknown format",
+            },
+            getatext: {
+                name: "GetAText",
+                endpoint: "https://getatext.com/api/v1/balance",
+                method: "GET",
+                headers: (key) => ({ Auth: key }),
+                parseResponse: (res) => res.data.balance || "Unknown format",
+            },
+            daisysms: {
+                name: "DaisySMS",
+                endpoint: (key) =>
+                    `https://daisysms.com/stubs/handler_api.php?api_key=${key}&action=getBalance`,
+                method: "GET",
+                headers: {},
+                parseResponse: (res) => res.data || "Unknown format",
+            },
+        };
 
-        // Initialize the app
+        // Initialization
         function init() {
             loadSavedData();
             setupEventListeners();
         }
 
-        // Load saved API key from localStorage
+        // Load API key from localStorage
         function loadSavedData() {
-            const savedKey = localStorage.getItem('captchaBalanceApiKey');
+            const savedKey = localStorage.getItem("captchaBalanceApiKey");
             if (savedKey) {
                 apiKeyInput.value = savedKey;
             }
         }
 
-        // Set up event listeners
+        // Set event listeners
         function setupEventListeners() {
-            checkBalanceBtn.addEventListener('click', handleCheckBalance);
-            toggleKeyBtn.addEventListener('click', toggleKeyVisibility);
+            checkBalanceBtn.addEventListener("click", handleCheckBalance);
+            toggleKeyBtn.addEventListener("click", toggleKeyVisibility);
         }
 
         // Toggle API key visibility
         function toggleKeyVisibility() {
-            const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            apiKeyInput.setAttribute('type', type);
-            toggleKeyBtn.innerHTML = type === 'password' ? '<i class="far fa-eye"></i>' : '<i class="far fa-eye-slash"></i>';
+            const type =
+                apiKeyInput.getAttribute("type") === "password" ? "text" : "password";
+            apiKeyInput.setAttribute("type", type);
+            toggleKeyBtn.innerHTML =
+                type === "password"
+                    ? '<i class="far fa-eye"></i>'
+                    : '<i class="far fa-eye-slash"></i>';
         }
 
         // Handle balance check
         async function handleCheckBalance() {
             const apiKey = apiKeyInput.value.trim();
             const provider = providerSelect.value;
-            
+
             if (!apiKey) {
                 showError("Please enter your API key");
                 return;
             }
-            
             if (!provider) {
                 showError("Please select a provider");
                 return;
             }
-            
-            // Save API key to localStorage
-            localStorage.setItem('captchaBalanceApiKey', apiKey);
-            
-            // Show loading state
+
+            localStorage.setItem("captchaBalanceApiKey", apiKey);
             setLoading(true);
-            
+
             try {
                 const balance = await checkProviderBalance(provider, apiKey);
                 showBalance(balance, provider);
             } catch (error) {
                 console.error("Error checking balance:", error);
-                
-                // Retry once if network error
-                if (error.message.includes('Network Error')) {
+                if (error.message.includes("Network Error")) {
                     try {
-                        console.log('provider retry' , provider); 
-                        console.log('apiKey retry' , apiKey); 
+                        // Retry once
                         const retryBalance = await checkProviderBalance(provider, apiKey);
                         showBalance(retryBalance, provider);
                         return;
@@ -278,70 +284,78 @@
             }
         }
 
-        // Check balance for the selected provider
+        // Check balance from provider
         async function checkProviderBalance(provider, apiKey) {
             const config = providers[provider];
-            if (!config) {
-                throw new Error("Invalid provider selected");
-            }
-            
+            if (!config) throw new Error("Invalid provider selected");
+
+            // Use function endpoint if exists
+            const url =
+                typeof config.endpoint === "function"
+                    ? config.endpoint(apiKey)
+                    : config.endpoint;
+
             const requestConfig = {
                 method: config.method,
-                url: config.endpoint,
-                headers: typeof config.headers === 'function' ? config.headers(apiKey) : config.headers
+                url,
+                headers:
+                    typeof config.headers === "function"
+                        ? config.headers(apiKey)
+                        : config.headers,
             };
-            console.log("requestConfig" +requestConfig.url ); 
-            
-            if (config.method === 'POST') {
-                requestConfig.data = typeof config.data === 'function' ? config.data(apiKey) : { api_key: apiKey };
+
+            if (config.method === "POST") {
+                requestConfig.data =
+                    typeof config.data === "function"
+                        ? config.data(apiKey)
+                        : { api_key: apiKey };
             } else {
-                requestConfig.params = typeof config.params === 'function' ? config.params(apiKey) : { api_key: apiKey };
+                requestConfig.params =
+                    typeof config.params === "function"
+                        ? config.params(apiKey)
+                        : { api_key: apiKey };
             }
 
-
-
-
-            
             const response = await axios(requestConfig);
-            
+
             if (response.data.error || (response.data && response.data.status === 0)) {
                 throw new Error(response.data.error || "Invalid API key or provider error");
             }
-            
+
             return config.parseResponse(response);
         }
 
-        // Show balance result
+        // Show balance in UI
         function showBalance(balance, provider) {
-            resultContainer.classList.remove('hidden');
+            resultContainer.classList.remove("hidden");
             balanceResult.textContent = `Balance: ${balance}`;
-            errorResult.textContent = '';
+            errorResult.textContent = "";
             providerInfo.textContent = `Provider: ${providers[provider].name}`;
         }
 
-        // Show error message
+        // Show error in UI
         function showError(message) {
-            resultContainer.classList.remove('hidden');
-            balanceResult.textContent = '';
+            resultContainer.classList.remove("hidden");
+            balanceResult.textContent = "";
             errorResult.textContent = message;
-            providerInfo.textContent = '';
+            providerInfo.textContent = "";
         }
 
-        // Set loading state
+        // Set loading UI
         function setLoading(isLoading) {
             if (isLoading) {
                 checkBalanceBtn.disabled = true;
-                buttonText.textContent = 'Checking...';
-                loadingSpinner.classList.remove('hidden');
+                buttonText.textContent = "Checking...";
+                loadingSpinner.classList.remove("hidden");
             } else {
                 checkBalanceBtn.disabled = false;
-                buttonText.textContent = 'Check Balance';
-                loadingSpinner.classList.add('hidden');
+                buttonText.textContent = "Check Balance";
+                loadingSpinner.classList.add("hidden");
             }
         }
 
-        // Initialize the app when DOM is loaded
-        document.addEventListener('DOMContentLoaded', init);
+        // Run init on DOM ready
+        document.addEventListener("DOMContentLoaded", init);
     </script>
 </body>
 </html>
